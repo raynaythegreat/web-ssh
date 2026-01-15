@@ -619,12 +619,14 @@
         try {
           socket = io({
             auth: { token },
-            // Use polling only for Vercel serverless compatibility
-            transports: ["polling"],
-            // Disable ALL automatic reconnection
-            reconnection: false,
-            timeout: 30000,
-            forceNew: true,
+            // Prefer WebSocket for real-time performance
+            transports: ["websocket", "polling"],
+            // Enable automatic reconnection
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
           })
         } catch (err) {
           console.error("Failed to create socket:", err)
@@ -673,19 +675,47 @@
         socket.on("disconnect", (reason) => {
           console.log("Socket disconnected:", reason)
           isConnected = false
-          isConnecting = false
-          disconnectMessage.textContent = "Connection lost. Click Reconnect to try again."
-          updateConnectionStatus("disconnected")
+
+          // Socket.io will auto-reconnect unless server disconnected us
+          if (reason === "io server disconnect") {
+            isConnecting = false
+            disconnectMessage.textContent = "Session expired. Please log in again."
+            updateConnectionStatus("disconnected")
+          } else {
+            // Auto-reconnecting...
+            updateConnectionStatus("connecting")
+          }
         })
 
-        // Connection error - NO auto retry, user must click reconnect
+        // Connection error
         socket.on("connect_error", (error) => {
           console.error("Connection error:", error.message)
           isConnected = false
-          isConnecting = false
           reconnectAttempts++
 
-          disconnectMessage.textContent = `Connection failed: ${error.message}. Click Reconnect to try again.`
+          if (reconnectAttempts >= maxReconnectAttempts) {
+            isConnecting = false
+            disconnectMessage.textContent = `Connection failed: ${error.message}. Click Reconnect to try again.`
+            updateConnectionStatus("disconnected")
+          }
+          // Otherwise Socket.io will keep trying
+        })
+
+        // Reconnection events
+        socket.on("reconnect", (attemptNumber) => {
+          console.log("Reconnected after", attemptNumber, "attempts")
+          reconnectAttempts = 0
+        })
+
+        socket.on("reconnect_attempt", (attemptNumber) => {
+          console.log("Reconnection attempt", attemptNumber)
+          updateConnectionStatus("connecting")
+        })
+
+        socket.on("reconnect_failed", () => {
+          console.log("Reconnection failed")
+          isConnecting = false
+          disconnectMessage.textContent = "Unable to reconnect. Click Reconnect to try again."
           updateConnectionStatus("disconnected")
         })
 

@@ -28,13 +28,12 @@ const io = new Server(server, {
     origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
     methods: ["GET", "POST"],
   },
-  // Optimized for serverless environments
-  pingTimeout: 30000,
-  pingInterval: 10000,
-  transports: ["polling", "websocket"],
+  // Optimized for persistent server (Render, Railway, etc.)
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  // Prefer WebSocket for real-time performance
+  transports: ["websocket", "polling"],
   allowUpgrades: true,
-  // Prevent connection spam
-  connectTimeout: 45000,
 })
 
 const PORT = process.env.PORT || 3000

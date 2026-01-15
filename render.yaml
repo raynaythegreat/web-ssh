@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: web-ssh
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SSH_HOST
+        sync: false
+      - key: SSH_USER
+        sync: false
+      - key: SSH_PASSWORD_HASH
+        sync: false
