@@ -28,8 +28,13 @@ const io = new Server(server, {
     origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
     methods: ["GET", "POST"],
   },
-  pingTimeout: 60000,
-  pingInterval: 25000,
+  // Optimized for serverless environments
+  pingTimeout: 30000,
+  pingInterval: 10000,
+  transports: ["polling", "websocket"],
+  allowUpgrades: true,
+  // Prevent connection spam
+  connectTimeout: 45000,
 })
 
 const PORT = process.env.PORT || 3000
@@ -51,24 +56,14 @@ app.use(
   })
 )
 
-// Rate limiting for auth attempts
+// Rate limiting for auth attempts only (applied as route middleware)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts
+  max: 10, // 10 attempts
   message: { error: "Too many authentication attempts. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
 })
-
-// General rate limiting
-const generalLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // 100 requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-app.use(generalLimiter)
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
 

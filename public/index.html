@@ -586,14 +586,27 @@
           return
         }
 
+        // Prevent multiple simultaneous connection attempts
+        if (socket && socket.connected) {
+          return
+        }
+
         updateConnectionStatus("connecting")
+
+        // Clean up existing socket if any
+        if (socket) {
+          socket.removeAllListeners()
+          socket.disconnect()
+        }
 
         socket = io({
           auth: { token },
-          reconnection: true,
-          reconnectionAttempts: maxReconnectAttempts,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 5000,
+          // Use polling for Vercel serverless compatibility
+          transports: ["polling", "websocket"],
+          // Disable automatic reconnection - we'll handle it manually
+          reconnection: false,
+          timeout: 20000,
+          forceNew: true,
         })
 
         // Connection established
@@ -635,9 +648,9 @@
           console.log("Socket disconnected:", reason)
           isConnected = false
 
-          if (reason === "io server disconnect") {
-            // Server initiated disconnect - likely auth failure
-            disconnectMessage.textContent = "Session expired. Please log in again."
+          // Don't auto-reconnect - show disconnect overlay instead
+          if (reason === "io server disconnect" || reason === "transport close") {
+            disconnectMessage.textContent = "Connection lost. Click Reconnect to try again."
             updateConnectionStatus("disconnected")
           }
         })
@@ -646,10 +659,21 @@
         socket.on("connect_error", (error) => {
           console.error("Connection error:", error)
           reconnectAttempts++
+          isConnected = false
 
+          // Stop trying after max attempts
           if (reconnectAttempts >= maxReconnectAttempts) {
             disconnectMessage.textContent = "Unable to connect. Please check your connection and try again."
             updateConnectionStatus("disconnected")
+          } else {
+            // Manual retry with exponential backoff
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000)
+            console.log(`Retrying in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`)
+            setTimeout(() => {
+              if (!isConnected && reconnectAttempts < maxReconnectAttempts) {
+                connect()
+              }
+            }, delay)
           }
         })
 
