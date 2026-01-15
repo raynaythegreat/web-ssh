@@ -1,47 +1,109 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Terminal Login</title>
+    <meta name="theme-color" content="#0d1117" />
+    <title>Web Terminal - Login</title>
 
     <style>
+      :root {
+        --bg-primary: #0d1117;
+        --bg-secondary: #161b22;
+        --bg-tertiary: #21262d;
+        --border-color: #30363d;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --accent-green: #3fb950;
+        --accent-red: #f85149;
+        --accent-blue: #58a6ff;
+        --accent-yellow: #d29922;
+      }
+
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        height: 100%;
       }
 
       body {
-        margin: 0;
-        padding: 20px;
-        background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-        color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Mono", Monaco, monospace;
-        touch-action: manipulation;
-        -webkit-text-size-adjust: 100%;
-        min-height: 100vh;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 20px;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* Background animation */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(63, 185, 80, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
       }
 
       .login-container {
-        background: rgba(30, 30, 30, 0.9);
-        border: 1px solid #444;
+        position: relative;
+        z-index: 1;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
-        padding: 30px;
+        padding: 32px;
         width: 100%;
         max-width: 400px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
       }
 
       .logo {
-        text-align: center;
-        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      .logo-text {
         font-size: 24px;
-        color: #0f0;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 28px;
       }
 
       .form-group {
@@ -52,125 +114,240 @@
         display: block;
         margin-bottom: 8px;
         font-size: 14px;
-        color: #ccc;
         font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        pointer-events: none;
+      }
+
+      .input-icon svg {
+        width: 18px;
+        height: 18px;
       }
 
       input[type="password"] {
         width: 100%;
-        padding: 12px;
-        background: #2a2a2a;
-        border: 1px solid #555;
+        padding: 12px 12px 12px 42px;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
-        color: #fff;
-        font-size: 16px;
+        color: var(--text-primary);
+        font-size: 15px;
         outline: none;
-        transition: border-color 0.3s;
+        transition: all 0.2s ease;
       }
 
       input[type="password"]:focus {
-        border-color: #007aff;
-        box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+      }
+
+      input[type="password"]::placeholder {
+        color: var(--text-secondary);
       }
 
       .checkbox-group {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        cursor: pointer;
+      }
+
+      .checkbox-wrapper {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
       }
 
       input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-right: 10px;
-        accent-color: #007aff;
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        z-index: 1;
+      }
+
+      .checkbox-custom {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        height: 20px;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      input[type="checkbox"]:checked + .checkbox-custom {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+      }
+
+      .checkbox-custom::after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 7px;
+        top: 3px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+
+      input[type="checkbox"]:checked + .checkbox-custom::after {
+        display: block;
       }
 
       .checkbox-label {
         font-size: 14px;
-        color: #ccc;
+        color: var(--text-secondary);
+        user-select: none;
       }
 
-      button {
+      .btn-primary {
         width: 100%;
-        padding: 14px;
-        background: #007aff;
-        color: #fff;
+        padding: 14px 20px;
+        background: var(--accent-blue);
+        color: white;
         border: none;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         -webkit-tap-highlight-color: transparent;
       }
 
-      button:hover {
-        background: #0056cc;
+      .btn-primary:hover:not(:disabled) {
+        background: #4a9eff;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
       }
 
-      button:active {
-        background: #004999;
+      .btn-primary:active:not(:disabled) {
         transform: translateY(0);
       }
 
-      button:disabled {
-        background: #666;
+      .btn-primary:disabled {
+        opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
       }
 
-      .error {
-        background: rgba(255, 59, 48, 0.1);
-        border: 1px solid #ff3b30;
-        color: #ff3b30;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 15px;
+      .btn-primary svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .error-message {
+        background: rgba(248, 81, 73, 0.1);
+        border: 1px solid rgba(248, 81, 73, 0.4);
+        color: var(--accent-red);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 20px;
         font-size: 14px;
         display: none;
+        align-items: center;
+        gap: 10px;
       }
 
-      .loading {
-        text-align: center;
-        color: #007aff;
-        font-size: 14px;
-        display: none;
+      .error-message.visible {
+        display: flex;
       }
 
-      .device-info {
-        margin-top: 20px;
+      .error-message svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .footer {
+        margin-top: 24px;
         padding-top: 20px;
-        border-top: 1px solid #444;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         font-size: 12px;
-        color: #666;
-        text-align: center;
+        color: var(--text-secondary);
+      }
+
+      .footer svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .security-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        background: rgba(63, 185, 80, 0.1);
+        border: 1px solid rgba(63, 185, 80, 0.3);
+        border-radius: 4px;
+        color: var(--accent-green);
+        font-size: 11px;
+        font-weight: 500;
       }
 
       @media (max-width: 480px) {
         body {
-          padding: 10px;
+          padding: 16px;
+          align-items: flex-start;
+          padding-top: 60px;
         }
+
         .login-container {
-          padding: 20px;
-          margin: 10px;
+          padding: 24px;
         }
-        .logo {
+
+        .logo-text {
           font-size: 20px;
-          margin-bottom: 20px;
         }
-        input[type="password"] {
-          font-size: 16px;
-          padding: 10px;
-        }
-        button {
-          padding: 12px;
-          font-size: 15px;
+
+        .logo-icon {
+          width: 36px;
+          height: 36px;
+          font-size: 18px;
         }
       }
 
-      /* Prevent zoom on input focus */
+      /* Prevent iOS zoom on input focus */
       @supports (-webkit-touch-callout: none) {
         input[type="password"] {
           font-size: 16px;
@@ -180,35 +357,66 @@
   </head>
   <body>
     <div class="login-container">
-      <div class="logo">🔐 SSH Terminal Access</div>
+      <div class="logo">
+        <div class="logo-icon">&#x1F5A5;</div>
+        <span class="logo-text">Web Terminal</span>
+      </div>
 
-      <div class="error" id="error-message">Invalid password. Please try again.</div>
+      <p class="subtitle">Secure shell access from your browser</p>
 
-      <div class="loading" id="loading">Connecting...</div>
+      <div class="error-message" id="error-message">
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2.343 13.657A8 8 0 1 1 13.658 2.343 8 8 0 0 1 2.343 13.657ZM6.03 4.97a.751.751 0 0 0-1.042.018.751.751 0 0 0-.018 1.042L6.94 8 4.97 9.97a.749.749 0 0 0 .326 1.275.749.749 0 0 0 .734-.215L8 9.06l1.97 1.97a.749.749 0 0 0 1.275-.326.749.749 0 0 0-.215-.734L9.06 8l1.97-1.97a.749.749 0 0 0-.326-1.275.749.749 0 0 0-.734.215L8 6.94Z"/>
+        </svg>
+        <span id="error-text">Authentication failed. Please check your password.</span>
+      </div>
 
       <form id="login-form">
         <div class="form-group">
           <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter password..."
-            autocomplete="current-password"
-            autofocus
-            required
-          />
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5v1.25H8v1.5H4.5a.75.75 0 0 0-.75.75v6.75c0 .414.336.75.75.75h7a.75.75 0 0 0 .75-.75V8a.75.75 0 0 0-.75-.75H9.5v-1.5h2.5V4.5A3.5 3.5 0 0 0 8 1Zm2 3.5v1.25H6V4.5a2 2 0 1 1 4 0Z"/>
+              </svg>
+            </span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              autofocus
+              required
+            />
+          </div>
         </div>
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="remember" name="remember" />
-          <label for="remember" class="checkbox-label">Remember this device for 30 days</label>
-        </div>
+        <label class="checkbox-group">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="remember" name="remember" />
+            <span class="checkbox-custom"></span>
+          </div>
+          <span class="checkbox-label">Remember this device for 30 days</span>
+        </label>
 
-        <button type="submit" id="login-btn">Access Terminal</button>
+        <button type="submit" class="btn-primary" id="login-btn">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 0 1 0 1.5h-2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 0 1 0 1.5h-2.5A1.75 1.75 0 0 1 2 13.25Zm10.44 4.5-1.97-1.97a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.97-1.97H6.75a.75.75 0 0 1 0-1.5Z"/>
+          </svg>
+          <span id="btn-text">Sign In</span>
+        </button>
       </form>
 
-      <div class="device-info">🔒 Secure access to doughstackr@100.115.92.206</div>
+      <div class="footer">
+        <span class="security-badge">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8.533.133a1.75 1.75 0 0 0-1.066 0l-5.25 1.68A1.75 1.75 0 0 0 1 3.48V7c0 1.566.32 3.182 1.303 4.682.983 1.498 2.585 2.813 5.032 3.855a1.697 1.697 0 0 0 1.33 0c2.447-1.042 4.049-2.357 5.032-3.855C14.68 10.182 15 8.566 15 7V3.48a1.75 1.75 0 0 0-1.217-1.667Zm-.61 1.429a.25.25 0 0 1 .153 0l5.25 1.68a.25.25 0 0 1 .174.238V7c0 1.358-.275 2.666-1.057 3.86-.784 1.194-2.121 2.34-4.366 3.297a.196.196 0 0 1-.154 0c-2.245-.956-3.582-2.104-4.366-3.298C2.775 9.666 2.5 8.358 2.5 7V3.48a.25.25 0 0 1 .174-.237l5.25-1.68ZM9.5 6.5c0 .536-.286 1.032-.75 1.3v2.45a.75.75 0 0 1-1.5 0V7.8A1.5 1.5 0 1 1 9.5 6.5Z"/>
+          </svg>
+          Encrypted
+        </span>
+        <span>Secure terminal connection</span>
+      </div>
     </div>
 
     <script>
@@ -216,47 +424,54 @@
       const passwordInput = document.getElementById("password")
       const rememberCheckbox = document.getElementById("remember")
       const loginBtn = document.getElementById("login-btn")
+      const btnText = document.getElementById("btn-text")
       const errorMessage = document.getElementById("error-message")
-      const loading = document.getElementById("loading")
+      const errorText = document.getElementById("error-text")
 
-      // Check for existing remembered device
-      function checkRememberedDevice() {
+      // Check for saved session
+      function checkExistingSession() {
         const savedToken = localStorage.getItem("terminal-token")
         const savedExpiry = localStorage.getItem("terminal-token-expiry")
 
         if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
-          // Auto-login with remembered device
-          localStorage.setItem("terminal-token", savedToken)
           window.location.href = "/terminal?token=" + savedToken
           return true
         }
+
+        // Clear expired token
+        if (savedToken) {
+          localStorage.removeItem("terminal-token")
+          localStorage.removeItem("terminal-token-expiry")
+        }
+
         return false
       }
 
-      // Check for remembered device on page load
-      if (!checkRememberedDevice()) {
-        // Focus password field
+      // Check on load
+      if (!checkExistingSession()) {
         passwordInput.focus()
       }
 
+      // Handle form submission
       form.addEventListener("submit", async (e) => {
         e.preventDefault()
 
-        const password = passwordInput.value
+        const password = passwordInput.value.trim()
         const remember = rememberCheckbox.checked
 
-        // Show loading
-        loading.style.display = "block"
-        errorMessage.style.display = "none"
-        loginBtn.disabled = true
-        loginBtn.textContent = "Authenticating..."
+        if (!password) {
+          showError("Please enter your password")
+          return
+        }
+
+        // Show loading state
+        setLoading(true)
+        hideError()
 
         try {
           const response = await fetch("/auth", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password, remember }),
           })
 
@@ -268,29 +483,51 @@
 
             if (data.remember) {
               localStorage.setItem("terminal-token", data.token)
-              localStorage.setItem("terminal-token-expiry", data.expires)
+              localStorage.setItem("terminal-token-expiry", data.expires.toString())
             }
 
-            // Redirect to terminal
-            window.location.href = "/terminal?token=" + data.token
+            // Success - redirect
+            btnText.textContent = "Success!"
+            setTimeout(() => {
+              window.location.href = "/terminal?token=" + data.token
+            }, 300)
           } else {
             throw new Error(data.error || "Authentication failed")
           }
         } catch (error) {
-          errorMessage.style.display = "block"
+          showError(error.message || "Authentication failed. Please try again.")
           passwordInput.value = ""
           passwordInput.focus()
-        } finally {
-          loading.style.display = "none"
-          loginBtn.disabled = false
-          loginBtn.textContent = "Access Terminal"
+          setLoading(false)
         }
       })
 
+      function setLoading(loading) {
+        loginBtn.disabled = loading
+
+        if (loading) {
+          loginBtn.innerHTML = '<div class="spinner"></div><span>Authenticating...</span>'
+        } else {
+          loginBtn.innerHTML = `
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 0 1 0 1.5h-2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 0 1 0 1.5h-2.5A1.75 1.75 0 0 1 2 13.25Zm10.44 4.5-1.97-1.97a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.97-1.97H6.75a.75.75 0 0 1 0-1.5Z"/>
+            </svg>
+            <span>Sign In</span>
+          `
+        }
+      }
+
+      function showError(message) {
+        errorText.textContent = message
+        errorMessage.classList.add("visible")
+      }
+
+      function hideError() {
+        errorMessage.classList.remove("visible")
+      }
+
       // Clear error on input
-      passwordInput.addEventListener("input", () => {
-        errorMessage.style.display = "none"
-      })
+      passwordInput.addEventListener("input", hideError)
     </script>
   </body>
 </html>
