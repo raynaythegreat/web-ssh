@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Terminal Login</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Mono", Monaco, monospace;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-container {
+        background: rgba(30, 30, 30, 0.9);
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 30px;
+        width: 100%;
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 24px;
+        color: #0f0;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #ccc;
+        font-weight: 500;
+      }
+
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        background: #2a2a2a;
+        border: 1px solid #555;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 16px;
+        outline: none;
+        transition: border-color 0.3s;
+      }
+
+      input[type="password"]:focus {
+        border-color: #007aff;
+        box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+        accent-color: #007aff;
+      }
+
+      .checkbox-label {
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        background: #007aff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:hover {
+        background: #0056cc;
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        background: #004999;
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error {
+        background: rgba(255, 59, 48, 0.1);
+        border: 1px solid #ff3b30;
+        color: #ff3b30;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        color: #007aff;
+        font-size: 14px;
+        display: none;
+      }
+
+      .device-info {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #444;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 10px;
+        }
+        .login-container {
+          padding: 20px;
+          margin: 10px;
+        }
+        .logo {
+          font-size: 20px;
+          margin-bottom: 20px;
+        }
+        input[type="password"] {
+          font-size: 16px;
+          padding: 10px;
+        }
+        button {
+          padding: 12px;
+          font-size: 15px;
+        }
+      }
+
+      /* Prevent zoom on input focus */
+      @supports (-webkit-touch-callout: none) {
+        input[type="password"] {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo">🔐 SSH Terminal Access</div>
+
+      <div class="error" id="error-message">Invalid password. Please try again.</div>
+
+      <div class="loading" id="loading">Connecting...</div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter password..."
+            autocomplete="current-password"
+            autofocus
+            required
+          />
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="remember" name="remember" />
+          <label for="remember" class="checkbox-label">Remember this device for 30 days</label>
+        </div>
+
+        <button type="submit" id="login-btn">Access Terminal</button>
+      </form>
+
+      <div class="device-info">🔒 Secure access to doughstackr@100.115.92.206</div>
+    </div>
+
+    <script>
+      const form = document.getElementById("login-form")
+      const passwordInput = document.getElementById("password")
+      const rememberCheckbox = document.getElementById("remember")
+      const loginBtn = document.getElementById("login-btn")
+      const errorMessage = document.getElementById("error-message")
+      const loading = document.getElementById("loading")
+
+      // Check for existing remembered device
+      function checkRememberedDevice() {
+        const savedToken = localStorage.getItem("terminal-token")
+        const savedExpiry = localStorage.getItem("terminal-token-expiry")
+
+        if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
+          // Auto-login with remembered device
+          localStorage.setItem("terminal-token", savedToken)
+          window.location.href = "/terminal?token=" + savedToken
+          return true
+        }
+        return false
+      }
+
+      // Check for remembered device on page load
+      if (!checkRememberedDevice()) {
+        // Focus password field
+        passwordInput.focus()
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault()
+
+        const password = passwordInput.value
+        const remember = rememberCheckbox.checked
+
+        // Show loading
+        loading.style.display = "block"
+        errorMessage.style.display = "none"
+        loginBtn.disabled = true
+        loginBtn.textContent = "Authenticating..."
+
+        try {
+          const response = await fetch("/auth", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password, remember }),
+          })
+
+          const data = await response.json()
+
+          if (response.ok) {
+            // Store token
+            sessionStorage.setItem("terminal-token", data.token)
+
+            if (data.remember) {
+              localStorage.setItem("terminal-token", data.token)
+              localStorage.setItem("terminal-token-expiry", data.expires)
+            }
+
+            // Redirect to terminal
+            window.location.href = "/terminal?token=" + data.token
+          } else {
+            throw new Error(data.error || "Authentication failed")
+          }
+        } catch (error) {
+          errorMessage.style.display = "block"
+          passwordInput.value = ""
+          passwordInput.focus()
+        } finally {
+          loading.style.display = "none"
+          loginBtn.disabled = false
+          loginBtn.textContent = "Access Terminal"
+        }
+      })
+
+      // Clear error on input
+      passwordInput.addEventListener("input", () => {
+        errorMessage.style.display = "none"
+      })
+    </script>
+  </body>
+</html>
