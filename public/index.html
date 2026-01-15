@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Web Terminal</title>
+    <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #000;
+      }
+      #terminal {
+        height: calc(100vh - 40px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const term = new Terminal({ cursorBlink: true })
+      const fit = new FitAddon.FitAddon()
+      term.loadAddon(fit)
+
+      term.open(document.getElementById("terminal"))
+      fit.fit()
+
+      const socket = io()
+
+      socket.on("output", (data) => {
+        term.write(data)
+      })
+
+      term.onData((data) => {
+        socket.emit("input", data)
+      })
+
+      term.onResize((size) => {
+        socket.emit("resize", { cols: size.cols, rows: size.rows })
+      })
+
+      window.addEventListener("resize", () => {
+        fit.fit()
+      })
+    </script>
+  </body>
+</html>
