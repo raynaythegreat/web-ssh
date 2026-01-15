@@ -2,48 +2,108 @@
 <html>
   <head>
     <title>Web Terminal</title>
-    <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
-    <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
     <style>
       body {
         margin: 0;
         padding: 20px;
-        background: #000;
+        background: #1e1e1e;
+        color: #fff;
+        font-family: "Courier New", monospace;
       }
-      #terminal {
-        height: calc(100vh - 40px);
+      .terminal {
+        background: #000;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 10px;
+        height: calc(100vh - 100px);
+        overflow-y: auto;
+        white-space: pre-wrap;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+      }
+      .input-line {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .prompt {
+        color: #0f0;
+        margin-right: 10px;
+      }
+      input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        outline: none;
+        flex: 1;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+      }
+      button {
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 5px 15px;
+        margin-left: 10px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #555;
       }
     </style>
   </head>
   <body>
-    <div id="terminal"></div>
-    <script src="/socket.io/socket.io.js"></script>
+    <h2>Web Terminal - Connected to doughstackr@100.115.92.206</h2>
+    <div class="terminal" id="output"></div>
+    <div class="input-line">
+      <span class="prompt">$</span>
+      <input type="text" id="command" placeholder="Type command here..." autofocus />
+      <button onclick="executeCommand()">Execute</button>
+    </div>
+
     <script>
-      const term = new Terminal({ cursorBlink: true })
-      const fit = new FitAddon.FitAddon()
-      term.loadAddon(fit)
+      const output = document.getElementById("output")
+      const commandInput = document.getElementById("command")
 
-      term.open(document.getElementById("terminal"))
-      fit.fit()
-
-      const socket = io()
-
-      socket.on("output", (data) => {
-        term.write(data)
+      commandInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          executeCommand()
+        }
       })
 
-      term.onData((data) => {
-        socket.emit("input", data)
+      function executeCommand() {
+        const command = commandInput.value.trim()
+        if (!command) return
+
+        output.innerHTML += `<div class="prompt">$</div><div>${command}</div>`
+        commandInput.value = ""
+
+        fetch("/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ command }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            output.innerHTML += `<div>${data.output}</div>`
+            output.scrollTop = output.scrollHeight
+          })
+          .catch((error) => {
+            output.innerHTML += `<div style="color: red;">Error: ${error.message}</div>`
+          })
+      }
+
+      // Focus on input when clicking anywhere
+      document.addEventListener("click", () => {
+        commandInput.focus()
       })
 
-      term.onResize((size) => {
-        socket.emit("resize", { cols: size.cols, rows: size.rows })
-      })
-
-      window.addEventListener("resize", () => {
-        fit.fit()
-      })
+      // Show welcome message
+      output.innerHTML =
+        '<div style="color: #0f0;">Welcome to Web Terminal!</div><div>Connected to your computer via SSH</div><div>Type commands below and press Enter</div><div>Commands: ls, pwd, whoami, etc.</div>'
     </script>
   </body>
 </html>

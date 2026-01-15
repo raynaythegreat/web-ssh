@@ -1,12 +1,9 @@
 const express = require("express")
-const { Server } = require("socket.io")
-const http = require("http")
 const path = require("path")
-const pty = require("node-pty")
+const { spawn } = require("child_process")
 
 const app = express()
-const server = http.createServer(app)
-const io = new Server(server)
+const PORT = process.env.PORT || 3000
 
 app.use(express.static(path.join(__dirname, "public")))
 
@@ -14,37 +11,28 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"))
 })
 
-io.on("connection", (socket) => {
-  console.log("New connection")
+// Simple command execution endpoint (for demonstration)
+app.post("/exec", express.json(), (req, res) => {
+  const { command } = req.body
 
-  // Create SSH connection to your computer
-  const shell = pty.spawn("ssh", ["doughstackr@100.115.92.206"], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 24,
-    cwd: process.env.HOME,
-    env: process.env,
+  const ssh = spawn("ssh", ["doughstackr@100.115.92.206", command], {
+    stdio: ["pipe", "pipe", "pipe"],
   })
 
-  shell.on("data", (data) => {
-    socket.emit("output", data)
+  let output = ""
+  ssh.stdout.on("data", (data) => {
+    output += data.toString()
   })
 
-  socket.on("input", (data) => {
-    shell.write(data)
+  ssh.stderr.on("data", (data) => {
+    output += data.toString()
   })
 
-  socket.on("resize", (data) => {
-    shell.resize(data.cols, data.rows)
-  })
-
-  socket.on("disconnect", () => {
-    shell.destroy()
-    console.log("Disconnected")
+  ssh.on("close", (code) => {
+    res.json({ output, code })
   })
 })
 
-const PORT = process.env.PORT || 3000
-server.listen(PORT, () => {
-  console.log(`Web SSH running on port ${PORT}`)
+app.listen(PORT, () => {
+  console.log(`Simple Web Terminal running on port ${PORT}`)
 })
