@@ -540,8 +540,10 @@
       // State
       let socket = null
       let isConnected = false
+      let isConnecting = false
       let reconnectAttempts = 0
-      const maxReconnectAttempts = 5
+      let retryTimer = null
+      const maxReconnectAttempts = 3
 
       // Initialize terminal
       terminal.open(terminalElement)
@@ -564,16 +566,32 @@
             connectionText.textContent = "Connected"
             connectingOverlay.classList.remove("visible")
             disconnectedOverlay.classList.remove("visible")
+            isConnecting = false
             break
           case "disconnected":
             connectionText.textContent = "Disconnected"
             disconnectedOverlay.classList.add("visible")
+            connectingOverlay.classList.remove("visible")
+            isConnecting = false
             break
           case "connecting":
             connectionText.textContent = "Connecting"
             connectingOverlay.classList.add("visible")
             disconnectedOverlay.classList.remove("visible")
             break
+        }
+      }
+
+      // Cleanup socket completely
+      function cleanupSocket() {
+        if (retryTimer) {
+          clearTimeout(retryTimer)
+          retryTimer = null
+        }
+        if (socket) {
+          socket.removeAllListeners()
+          socket.disconnect()
+          socket = null
         }
       }
 
@@ -586,28 +604,34 @@
           return
         }
 
-        // Prevent multiple simultaneous connection attempts
-        if (socket && socket.connected) {
+        // Strict guard against multiple connection attempts
+        if (isConnecting || isConnected) {
+          console.log("Already connecting or connected, skipping")
           return
         }
 
+        isConnecting = true
         updateConnectionStatus("connecting")
 
-        // Clean up existing socket if any
-        if (socket) {
-          socket.removeAllListeners()
-          socket.disconnect()
-        }
+        // Clean up any existing connection
+        cleanupSocket()
 
-        socket = io({
-          auth: { token },
-          // Use polling for Vercel serverless compatibility
-          transports: ["polling", "websocket"],
-          // Disable automatic reconnection - we'll handle it manually
-          reconnection: false,
-          timeout: 20000,
-          forceNew: true,
-        })
+        try {
+          socket = io({
+            auth: { token },
+            // Use polling only for Vercel serverless compatibility
+            transports: ["polling"],
+            // Disable ALL automatic reconnection
+            reconnection: false,
+            timeout: 30000,
+            forceNew: true,
+          })
+        } catch (err) {
+          console.error("Failed to create socket:", err)
+          isConnecting = false
+          updateConnectionStatus("disconnected")
+          return
+        }
 
         // Connection established
         socket.on("connect", () => {
@@ -626,6 +650,7 @@
         socket.on("connected", (data) => {
           console.log("SSH connected:", data)
           isConnected = true
+          isConnecting = false
           updateConnectionStatus("connected")
           terminal.focus()
         })
@@ -638,6 +663,7 @@
         // Terminal disconnected
         socket.on("disconnect-terminal", ({ exitCode, signal }) => {
           isConnected = false
+          isConnecting = false
           disconnectMessage.textContent =
             `Session ended${exitCode !== undefined ? ` (exit code: ${exitCode})` : ""}${signal ? ` (signal: ${signal})` : ""}`
           updateConnectionStatus("disconnected")
@@ -647,34 +673,20 @@
         socket.on("disconnect", (reason) => {
           console.log("Socket disconnected:", reason)
           isConnected = false
-
-          // Don't auto-reconnect - show disconnect overlay instead
-          if (reason === "io server disconnect" || reason === "transport close") {
-            disconnectMessage.textContent = "Connection lost. Click Reconnect to try again."
-            updateConnectionStatus("disconnected")
-          }
+          isConnecting = false
+          disconnectMessage.textContent = "Connection lost. Click Reconnect to try again."
+          updateConnectionStatus("disconnected")
         })
 
-        // Connection error
+        // Connection error - NO auto retry, user must click reconnect
         socket.on("connect_error", (error) => {
-          console.error("Connection error:", error)
-          reconnectAttempts++
+          console.error("Connection error:", error.message)
           isConnected = false
+          isConnecting = false
+          reconnectAttempts++
 
-          // Stop trying after max attempts
-          if (reconnectAttempts >= maxReconnectAttempts) {
-            disconnectMessage.textContent = "Unable to connect. Please check your connection and try again."
-            updateConnectionStatus("disconnected")
-          } else {
-            // Manual retry with exponential backoff
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000)
-            console.log(`Retrying in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`)
-            setTimeout(() => {
-              if (!isConnected && reconnectAttempts < maxReconnectAttempts) {
-                connect()
-              }
-            }, delay)
-          }
+          disconnectMessage.textContent = `Connection failed: ${error.message}. Click Reconnect to try again.`
+          updateConnectionStatus("disconnected")
         })
 
         // Error from server
@@ -741,12 +753,15 @@
       }
 
       function reconnect() {
-        if (socket) {
-          socket.disconnect()
-        }
-        terminal.clear()
+        // Reset all state
+        isConnected = false
+        isConnecting = false
         reconnectAttempts = 0
-        connect()
+        cleanupSocket()
+        terminal.clear()
+        terminal.write("Reconnecting...\r\n")
+        // Small delay before reconnecting
+        setTimeout(connect, 500)
       }
 
       async function logout() {
