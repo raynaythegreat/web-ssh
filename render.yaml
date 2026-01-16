@@ -1,17 +1,27 @@
 services:
   - type: web
     name: web-ssh
-    runtime: node
-    plan: free
+    env: node
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: SSH_HOST
         sync: false
       - key: SSH_USER
         sync: false
-      - key: SSH_PASSWORD_HASH
-        sync: false
+      - key: PASSWORD_HASH
+        generateValue: true
+      - key: SESSION_TTL_MINUTES
+        value: 60
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: LOG_LEVEL
+        value: info
+      - key: CLEANUP_INTERVAL_MS
+        value: 300000
+      - key: PROCESS_TIMEOUT_MS
+        value: 1800000
