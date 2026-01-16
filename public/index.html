@@ -8,7 +8,6 @@
     <meta name="theme-color" content="#0d1117" />
     <title>Web Terminal</title>
 
-    <!-- xterm.js dependencies -->
     <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
     <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
@@ -19,38 +18,15 @@
       :root {
         --bg-primary: #0d1117;
         --bg-secondary: #161b22;
-        --bg-tertiary: #21262d;
         --border-color: #30363d;
         --text-primary: #e6edf3;
-        --text-secondary: #8b949e;
         --accent-green: #3fb950;
         --accent-red: #f85149;
-        --accent-blue: #58a6ff;
-        --accent-yellow: #d29922;
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html, body {
-        height: 100%;
-        overflow: hidden;
-      }
-
-      body {
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        touch-action: manipulation;
-        -webkit-text-size-adjust: 100%;
-      }
-
-      /* Header */
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; overflow: hidden; background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, system-ui, sans-serif; }
+      
       .header {
         background: var(--bg-secondary);
         border-bottom: 1px solid var(--border-color);
@@ -58,449 +34,57 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        flex-shrink: 0;
-        gap: 12px;
+        height: 48px;
       }
 
-      .header-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .logo {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
-        white-space: nowrap;
-      }
-
-      .connection-badge {
+      .logo { font-size: 14px; font-weight: 600; }
+      
+      .status {
         display: flex;
         align-items: center;
         gap: 6px;
+        font-size: 12px;
         padding: 4px 10px;
         border-radius: 20px;
-        font-size: 12px;
-        font-weight: 500;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
       }
 
-      .connection-badge.connected {
-        background: rgba(63, 185, 80, 0.15);
-        border-color: var(--accent-green);
-        color: var(--accent-green);
-      }
+      .status.connected { color: var(--accent-green); border: 1px solid var(--accent-green); }
+      .status.disconnected { color: var(--accent-red); border: 1px solid var(--accent-red); }
 
-      .connection-badge.disconnected {
-        background: rgba(248, 81, 73, 0.15);
-        border-color: var(--accent-red);
-        color: var(--accent-red);
-      }
-
-      .connection-badge.connecting {
-        background: rgba(210, 153, 34, 0.15);
-        border-color: var(--accent-yellow);
-        color: var(--accent-yellow);
-      }
-
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: currentColor;
-      }
-
-      .connection-badge.connecting .status-dot {
-        animation: pulse 1.5s ease-in-out infinite;
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
-      }
-
-      .header-right {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      /* Buttons */
-      .btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .btn:hover {
-        background: var(--border-color);
-        border-color: var(--text-secondary);
-      }
-
-      .btn:active {
-        transform: scale(0.98);
-      }
-
-      .btn-danger {
-        color: var(--accent-red);
-        border-color: rgba(248, 81, 73, 0.4);
-      }
-
-      .btn-danger:hover {
-        background: rgba(248, 81, 73, 0.15);
-        border-color: var(--accent-red);
-      }
-
-      .btn-icon {
-        padding: 6px 8px;
-      }
-
-      .btn svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      /* Terminal Container */
-      .terminal-wrapper {
+      #terminal-container {
         flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        position: relative;
-      }
-
-      .terminal-container {
-        flex: 1;
+        width: 100%;
+        height: calc(100vh - 48px);
         padding: 8px;
         background: var(--bg-primary);
-        min-height: 0;
-        overflow: hidden;
       }
-
-      #terminal {
-        width: 100%;
-        height: 100%;
-      }
-
-      .xterm {
-        padding: 4px;
-      }
-
-      /* Mobile Input Bar */
-      .mobile-input-bar {
-        display: none;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-        padding: 8px 12px;
-        gap: 8px;
-        flex-shrink: 0;
-      }
-
-      .mobile-input {
-        flex: 1;
-        padding: 10px 14px;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        color: var(--text-primary);
-        font-size: 16px;
-        font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-        outline: none;
-        transition: border-color 0.2s;
-      }
-
-      .mobile-input:focus {
-        border-color: var(--accent-blue);
-      }
-
-      .mobile-input::placeholder {
-        color: var(--text-secondary);
-      }
-
-      .send-btn {
-        padding: 10px 16px;
-        background: var(--accent-blue);
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      /* Special Keys Bar */
-      .special-keys {
-        display: none;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-        padding: 6px 8px;
-        gap: 6px;
-        overflow-x: auto;
-        flex-shrink: 0;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .special-keys::-webkit-scrollbar {
-        display: none;
-      }
-
-      .special-key {
-        padding: 8px 12px;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        color: var(--text-primary);
-        font-size: 12px;
-        font-family: monospace;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: all 0.2s;
-        flex-shrink: 0;
-      }
-
-      .special-key:hover, .special-key:active {
-        background: var(--border-color);
-        border-color: var(--text-secondary);
-      }
-
-      /* Overlay Messages */
-      .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(13, 17, 23, 0.95);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-      }
-
-      .overlay.visible {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .overlay-content {
-        text-align: center;
-        padding: 24px;
-      }
-
-      .overlay-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
-
-      .overlay-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-
-      .overlay-message {
-        color: var(--text-secondary);
-        margin-bottom: 20px;
-      }
-
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid var(--border-color);
-        border-top-color: var(--accent-blue);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 16px;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* Mobile Responsive */
-      @media (max-width: 768px) {
-        .header {
-          padding: 6px 10px;
-        }
-
-        .logo {
-          font-size: 13px;
-        }
-
-        .btn span {
-          display: none;
-        }
-
-        .btn-icon span {
-          display: inline;
-        }
-
-        .mobile-input-bar {
-          display: flex;
-        }
-
-        .special-keys {
-          display: flex;
-        }
-
-        .terminal-container {
-          padding: 4px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .connection-badge span:not(.status-dot) {
-          display: none;
-        }
-
-        .header-right .btn:not(.btn-danger) {
-          display: none;
-        }
-      }
-
-      /* Theme styles for xterm */
-      .xterm-viewport::-webkit-scrollbar {
-        width: 10px;
-      }
-
-      .xterm-viewport::-webkit-scrollbar-track {
-        background: var(--bg-primary);
-      }
-
-      .xterm-viewport::-webkit-scrollbar-thumb {
-        background: var(--border-color);
-        border-radius: 5px;
-      }
-
-      .xterm-viewport::-webkit-scrollbar-thumb:hover {
-        background: var(--text-secondary);
-      }
+      
+      .xterm { padding: 8px; }
     </style>
   </head>
   <body>
     <header class="header">
-      <div class="header-left">
-        <span class="logo">Web Terminal</span>
-        <div class="connection-badge connecting" id="connection-badge">
-          <span class="status-dot"></span>
-          <span id="connection-text">Connecting</span>
-        </div>
-      </div>
-      <div class="header-right">
-        <button class="btn btn-icon" onclick="clearTerminal()" title="Clear terminal">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
-          </svg>
-          <span>Clear</span>
-        </button>
-        <button class="btn btn-icon" onclick="reconnect()" title="Reconnect">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"/>
-          </svg>
-          <span>Reconnect</span>
-        </button>
-        <button class="btn btn-danger" onclick="logout()" title="Logout">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 0 1 0 1.5h-2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 0 1 0 1.5h-2.5A1.75 1.75 0 0 1 2 13.25Zm10.44 4.5-1.97-1.97a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.97-1.97H6.75a.75.75 0 0 1 0-1.5Z"/>
-          </svg>
-          <span>Logout</span>
-        </button>
-      </div>
+      <div class="logo">Web Terminal</div>
+      <div id="status-badge" class="status disconnected">Disconnected</div>
     </header>
-
-    <div class="terminal-wrapper">
-      <div class="terminal-container">
-        <div id="terminal"></div>
-      </div>
-
-      <!-- Connection Overlay -->
-      <div class="overlay" id="connecting-overlay">
-        <div class="overlay-content">
-          <div class="spinner"></div>
-          <div class="overlay-title">Connecting to server...</div>
-          <div class="overlay-message">Establishing secure connection</div>
-        </div>
-      </div>
-
-      <!-- Disconnected Overlay -->
-      <div class="overlay" id="disconnected-overlay">
-        <div class="overlay-content">
-          <div class="overlay-icon">&#x26A0;&#xFE0F;</div>
-          <div class="overlay-title">Connection Lost</div>
-          <div class="overlay-message" id="disconnect-message">The terminal session has ended.</div>
-          <button class="btn" onclick="reconnect()" style="margin: 0 auto;">
-            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
-              <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"/>
-            </svg>
-            <span>Reconnect</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Special Keys (Mobile) -->
-    <div class="special-keys" id="special-keys">
-      <button class="special-key" data-key="\x1b">ESC</button>
-      <button class="special-key" data-key="\t">TAB</button>
-      <button class="special-key" data-key="\x03">Ctrl+C</button>
-      <button class="special-key" data-key="\x04">Ctrl+D</button>
-      <button class="special-key" data-key="\x1a">Ctrl+Z</button>
-      <button class="special-key" data-key="\x0c">Ctrl+L</button>
-      <button class="special-key" data-key="\x1b[A">&#x2191;</button>
-      <button class="special-key" data-key="\x1b[B">&#x2193;</button>
-      <button class="special-key" data-key="\x1b[D">&#x2190;</button>
-      <button class="special-key" data-key="\x1b[C">&#x2192;</button>
-    </div>
-
-    <!-- Mobile Input -->
-    <div class="mobile-input-bar" id="mobile-input-bar">
-      <input
-        type="text"
-        class="mobile-input"
-        id="mobile-input"
-        placeholder="Type command..."
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-      />
-      <button class="send-btn" onclick="sendMobileInput()">Send</button>
-    </div>
+    <div id="terminal-container"></div>
 
     <script>
-      // Terminal configuration
-      const terminal = new Terminal({
+      const socket = io({
+        transports: ["websocket", "polling"],
+        reconnectionAttempts: 5
+      });
+
+      const term = new Terminal({
         cursorBlink: true,
-        cursorStyle: "bar",
+        fontFamily: '"Fira Code", "Cascadia Code", "Ubuntu Mono", monospace',
         fontSize: 14,
-        fontFamily: '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace',
-        lineHeight: 1.2,
-        scrollback: 10000,
         theme: {
           background: "#0d1117",
           foreground: "#e6edf3",
           cursor: "#58a6ff",
-          cursorAccent: "#0d1117",
-          selectionBackground: "#3b5070",
-          selectionForeground: "#e6edf3",
+          selectionBackground: "#334455",
           black: "#484f58",
           red: "#ff7b72",
           green: "#3fb950",
@@ -508,338 +92,48 @@
           blue: "#58a6ff",
           magenta: "#bc8cff",
           cyan: "#39c5cf",
-          white: "#b1bac4",
-          brightBlack: "#6e7681",
-          brightRed: "#ffa198",
-          brightGreen: "#56d364",
-          brightYellow: "#e3b341",
-          brightBlue: "#79c0ff",
-          brightMagenta: "#d2a8ff",
-          brightCyan: "#56d4dd",
-          brightWhite: "#f0f6fc",
-        },
-      })
-
-      // Addons
-      const fitAddon = new FitAddon.FitAddon()
-      const webLinksAddon = new WebLinksAddon.WebLinksAddon()
-
-      terminal.loadAddon(fitAddon)
-      terminal.loadAddon(webLinksAddon)
-
-      // DOM elements
-      const terminalElement = document.getElementById("terminal")
-      const connectionBadge = document.getElementById("connection-badge")
-      const connectionText = document.getElementById("connection-text")
-      const connectingOverlay = document.getElementById("connecting-overlay")
-      const disconnectedOverlay = document.getElementById("disconnected-overlay")
-      const disconnectMessage = document.getElementById("disconnect-message")
-      const mobileInput = document.getElementById("mobile-input")
-      const specialKeys = document.getElementById("special-keys")
-
-      // State
-      let socket = null
-      let isConnected = false
-      let isConnecting = false
-      let reconnectAttempts = 0
-      let retryTimer = null
-      const maxReconnectAttempts = 3
-
-      // Initialize terminal
-      terminal.open(terminalElement)
-      fitAddon.fit()
-
-      // Get auth token
-      function getToken() {
-        const urlParams = new URLSearchParams(window.location.search)
-        return urlParams.get("token") ||
-               sessionStorage.getItem("terminal-token") ||
-               localStorage.getItem("terminal-token")
-      }
-
-      // Update connection status
-      function updateConnectionStatus(status) {
-        connectionBadge.className = "connection-badge " + status
-
-        switch (status) {
-          case "connected":
-            connectionText.textContent = "Connected"
-            connectingOverlay.classList.remove("visible")
-            disconnectedOverlay.classList.remove("visible")
-            isConnecting = false
-            break
-          case "disconnected":
-            connectionText.textContent = "Disconnected"
-            disconnectedOverlay.classList.add("visible")
-            connectingOverlay.classList.remove("visible")
-            isConnecting = false
-            break
-          case "connecting":
-            connectionText.textContent = "Connecting"
-            connectingOverlay.classList.add("visible")
-            disconnectedOverlay.classList.remove("visible")
-            break
+          white: "#b1bac4"
         }
-      }
+      });
 
-      // Cleanup socket completely
-      function cleanupSocket() {
-        if (retryTimer) {
-          clearTimeout(retryTimer)
-          retryTimer = null
-        }
-        if (socket) {
-          socket.removeAllListeners()
-          socket.disconnect()
-          socket = null
-        }
-      }
+      const fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
+      term.loadAddon(new WebLinksAddon.WebLinksAddon());
+      term.open(document.getElementById("terminal-container"));
+      fitAddon.fit();
 
-      // Connect to server
-      function connect() {
-        const token = getToken()
+      const statusBadge = document.getElementById("status-badge");
 
-        if (!token) {
-          window.location.href = "/"
-          return
-        }
+      socket.on("connect", () => {
+        statusBadge.textContent = "Connected";
+        statusBadge.className = "status connected";
+        term.writeln("\x1b[32m✔ Socket connected\x1b[0m");
+      });
 
-        // Strict guard against multiple connection attempts
-        if (isConnecting || isConnected) {
-          console.log("Already connecting or connected, skipping")
-          return
-        }
+      socket.on("disconnect", () => {
+        statusBadge.textContent = "Disconnected";
+        statusBadge.className = "status disconnected";
+        term.writeln("\r\n\x1b[31m✘ Connection lost\x1b[0m");
+      });
 
-        isConnecting = true
-        updateConnectionStatus("connecting")
+      socket.on("data", (data) => {
+        term.write(data);
+      });
 
-        // Clean up any existing connection
-        cleanupSocket()
+      term.onData((data) => {
+        socket.emit("data", data);
+      });
 
-        try {
-          socket = io({
-            auth: { token },
-            // Prefer WebSocket for real-time performance
-            transports: ["websocket", "polling"],
-            // Enable automatic reconnection
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            timeout: 20000,
-          })
-        } catch (err) {
-          console.error("Failed to create socket:", err)
-          isConnecting = false
-          updateConnectionStatus("disconnected")
-          return
-        }
+      term.onResize((size) => {
+        socket.emit("resize", size);
+      });
 
-        // Connection established
-        socket.on("connect", () => {
-          console.log("Socket connected")
-          reconnectAttempts = 0
-
-          // Start SSH session with terminal dimensions
-          const dims = fitAddon.proposeDimensions()
-          socket.emit("start-ssh", {
-            cols: dims?.cols || 80,
-            rows: dims?.rows || 24,
-          })
-        })
-
-        // SSH session started
-        socket.on("connected", (data) => {
-          console.log("SSH connected:", data)
-          isConnected = true
-          isConnecting = false
-          updateConnectionStatus("connected")
-          terminal.focus()
-        })
-
-        // Terminal output
-        socket.on("output", (data) => {
-          terminal.write(data)
-        })
-
-        // Terminal disconnected
-        socket.on("disconnect-terminal", ({ exitCode, signal }) => {
-          isConnected = false
-          isConnecting = false
-          disconnectMessage.textContent =
-            `Session ended${exitCode !== undefined ? ` (exit code: ${exitCode})` : ""}${signal ? ` (signal: ${signal})` : ""}`
-          updateConnectionStatus("disconnected")
-        })
-
-        // Socket disconnected
-        socket.on("disconnect", (reason) => {
-          console.log("Socket disconnected:", reason)
-          isConnected = false
-
-          // Socket.io will auto-reconnect unless server disconnected us
-          if (reason === "io server disconnect") {
-            isConnecting = false
-            disconnectMessage.textContent = "Session expired. Please log in again."
-            updateConnectionStatus("disconnected")
-          } else {
-            // Auto-reconnecting...
-            updateConnectionStatus("connecting")
-          }
-        })
-
-        // Connection error
-        socket.on("connect_error", (error) => {
-          console.error("Connection error:", error.message)
-          isConnected = false
-          reconnectAttempts++
-
-          if (reconnectAttempts >= maxReconnectAttempts) {
-            isConnecting = false
-            disconnectMessage.textContent = `Connection failed: ${error.message}. Click Reconnect to try again.`
-            updateConnectionStatus("disconnected")
-          }
-          // Otherwise Socket.io will keep trying
-        })
-
-        // Reconnection events
-        socket.on("reconnect", (attemptNumber) => {
-          console.log("Reconnected after", attemptNumber, "attempts")
-          reconnectAttempts = 0
-        })
-
-        socket.on("reconnect_attempt", (attemptNumber) => {
-          console.log("Reconnection attempt", attemptNumber)
-          updateConnectionStatus("connecting")
-        })
-
-        socket.on("reconnect_failed", () => {
-          console.log("Reconnection failed")
-          isConnecting = false
-          disconnectMessage.textContent = "Unable to reconnect. Click Reconnect to try again."
-          updateConnectionStatus("disconnected")
-        })
-
-        // Error from server
-        socket.on("error", (data) => {
-          console.error("Server error:", data)
-          terminal.write(`\r\n\x1b[31mError: ${data.message}\x1b[0m\r\n`)
-        })
-      }
-
-      // Terminal input handler
-      terminal.onData((data) => {
-        if (isConnected && socket) {
-          socket.emit("input", data)
-        }
-      })
-
-      // Handle resize
-      function handleResize() {
-        fitAddon.fit()
-
-        if (isConnected && socket) {
-          const dims = fitAddon.proposeDimensions()
-          if (dims) {
-            socket.emit("resize", { cols: dims.cols, rows: dims.rows })
-          }
-        }
-      }
-
-      // Debounced resize handler
-      let resizeTimeout
       window.addEventListener("resize", () => {
-        clearTimeout(resizeTimeout)
-        resizeTimeout = setTimeout(handleResize, 100)
-      })
+        fitAddon.fit();
+      });
 
-      // Special keys (mobile)
-      specialKeys.querySelectorAll(".special-key").forEach(btn => {
-        btn.addEventListener("click", () => {
-          if (isConnected && socket) {
-            socket.emit("input", btn.dataset.key)
-            terminal.focus()
-          }
-        })
-      })
-
-      // Mobile input
-      mobileInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          sendMobileInput()
-        }
-      })
-
-      function sendMobileInput() {
-        const input = mobileInput.value
-        if (input && isConnected && socket) {
-          socket.emit("input", input + "\r")
-          mobileInput.value = ""
-        }
-      }
-
-      // Actions
-      function clearTerminal() {
-        terminal.clear()
-      }
-
-      function reconnect() {
-        // Reset all state
-        isConnected = false
-        isConnecting = false
-        reconnectAttempts = 0
-        cleanupSocket()
-        terminal.clear()
-        terminal.write("Reconnecting...\r\n")
-        // Small delay before reconnecting
-        setTimeout(connect, 500)
-      }
-
-      async function logout() {
-        const token = getToken()
-
-        if (token) {
-          try {
-            await fetch("/logout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token }),
-            })
-          } catch (error) {
-            console.error("Logout error:", error)
-          }
-        }
-
-        // Clear storage
-        localStorage.removeItem("terminal-token")
-        localStorage.removeItem("terminal-token-expiry")
-        sessionStorage.removeItem("terminal-token")
-
-        // Close socket
-        if (socket) {
-          socket.disconnect()
-        }
-
-        // Redirect
-        window.location.href = "/"
-      }
-
-      // Prevent zoom on double-tap (iOS)
-      let lastTouchEnd = 0
-      document.addEventListener("touchend", (e) => {
-        const now = Date.now()
-        if (now - lastTouchEnd <= 300) {
-          e.preventDefault()
-        }
-        lastTouchEnd = now
-      }, false)
-
-      // Focus terminal on click
-      terminalElement.addEventListener("click", () => {
-        terminal.focus()
-      })
-
-      // Initialize
-      connect()
+      // Initial fit delay to ensure container is ready
+      setTimeout(() => fitAddon.fit(), 100);
     </script>
   </body>
 </html>
