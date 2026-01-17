@@ -3,137 +3,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0d1117" />
     <title>Web Terminal</title>
-
     <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
     <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <script src="https://unpkg.com/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
     <script src="https://unpkg.com/socket.io@4.8.1/client-dist/socket.io.min.js"></script>
-
     <style>
       :root {
         --bg-primary: #0d1117;
         --bg-secondary: #161b22;
+        --bg-tertiary: #21262d;
         --border-color: #30363d;
         --text-primary: #e6edf3;
         --accent-green: #3fb950;
         --accent-red: #f85149;
       }
-
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; overflow: hidden; background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, system-ui, sans-serif; }
-      
+      body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: -apple-system, sans-serif;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
       .header {
         background: var(--bg-secondary);
         border-bottom: 1px solid var(--border-color);
         padding: 8px 16px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        height: 48px;
-      }
-
-      .logo { font-size: 14px; font-weight: 600; }
-      
-      .status {
-        display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 12px;
+      }
+      .connection-badge {
         padding: 4px 10px;
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.05);
+        font-size: 12px;
+        background: var(--bg-tertiary);
       }
-
-      .status.connected { color: var(--accent-green); border: 1px solid var(--accent-green); }
-      .status.disconnected { color: var(--accent-red); border: 1px solid var(--accent-red); }
-
-      #terminal-container {
-        flex: 1;
-        width: 100%;
-        height: calc(100vh - 48px);
-        padding: 8px;
-        background: var(--bg-primary);
-      }
-      
-      .xterm { padding: 8px; }
+      .connected { color: var(--accent-green); border: 1px solid var(--accent-green); }
+      .disconnected { color: var(--accent-red); border: 1px solid var(--accent-red); }
+      #terminal { flex: 1; padding: 10px; }
     </style>
   </head>
   <body>
     <header class="header">
-      <div class="logo">Web Terminal</div>
-      <div id="status-badge" class="status disconnected">Disconnected</div>
+      <div class="logo">WEB-SSH TERMINAL</div>
+      <div id="status-badge" class="connection-badge disconnected">
+        <span id="status-text">Disconnected</span>
+      </div>
     </header>
-    <div id="terminal-container"></div>
-
-    <script>
-      const socket = io({
-        transports: ["websocket", "polling"],
-        reconnectionAttempts: 5
-      });
-
-      const term = new Terminal({
-        cursorBlink: true,
-        fontFamily: '"Fira Code", "Cascadia Code", "Ubuntu Mono", monospace',
-        fontSize: 14,
-        theme: {
-          background: "#0d1117",
-          foreground: "#e6edf3",
-          cursor: "#58a6ff",
-          selectionBackground: "#334455",
-          black: "#484f58",
-          red: "#ff7b72",
-          green: "#3fb950",
-          yellow: "#d29922",
-          blue: "#58a6ff",
-          magenta: "#bc8cff",
-          cyan: "#39c5cf",
-          white: "#b1bac4"
-        }
-      });
-
-      const fitAddon = new FitAddon.FitAddon();
-      term.loadAddon(fitAddon);
-      term.loadAddon(new WebLinksAddon.WebLinksAddon());
-      term.open(document.getElementById("terminal-container"));
-      fitAddon.fit();
-
-      const statusBadge = document.getElementById("status-badge");
-
-      socket.on("connect", () => {
-        statusBadge.textContent = "Connected";
-        statusBadge.className = "status connected";
-        term.writeln("\x1b[32m✔ Socket connected\x1b[0m");
-      });
-
-      socket.on("disconnect", () => {
-        statusBadge.textContent = "Disconnected";
-        statusBadge.className = "status disconnected";
-        term.writeln("\r\n\x1b[31m✘ Connection lost\x1b[0m");
-      });
-
-      socket.on("data", (data) => {
-        term.write(data);
-      });
-
-      term.onData((data) => {
-        socket.emit("data", data);
-      });
-
-      term.onResize((size) => {
-        socket.emit("resize", size);
-      });
-
-      window.addEventListener("resize", () => {
-        fitAddon.fit();
-      });
-
-      // Initial fit delay to ensure container is ready
-      setTimeout(() => fitAddon.fit(), 100);
-    </script>
+    <div id="terminal"></div>
+    <script src="/js/app.js"></script>
   </body>
 </html>
